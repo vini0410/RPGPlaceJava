@@ -1,6 +1,8 @@
 package com.rpgplace.application.infrastructure.adapter.web.mapper;
 
 import com.rpgplace.application.domain.model.UserEntity;
+import com.rpgplace.application.infrastructure.adapter.web.dto.request.UserUpdateRequestDTO;
+import com.rpgplace.application.infrastructure.adapter.web.dto.request.RegisterRequestDTO;
 import com.rpgplace.application.infrastructure.adapter.web.dto.request.UserRequestDTO;
 import com.rpgplace.application.infrastructure.adapter.web.dto.response.UserResponseDTO;
 import org.mapstruct.Mapper;
@@ -11,6 +13,10 @@ import org.mapstruct.MappingTarget;
 public interface UserMapper {
 
     UserEntity toEntity(UserRequestDTO userRequestDTO);
+
+    UserEntity toEntity(UserUpdateRequestDTO userUpdateRequestDTO);
+
+    UserEntity toEntity(RegisterRequestDTO registerRequestDTO);
 
     UserResponseDTO toResponseDTO(UserEntity userEntity);
 

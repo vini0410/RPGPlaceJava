@@ -1,11 +1,23 @@
 package com.rpgplace.application.infrastructure.adapter.web.controller;
 
+import com.rpgplace.application.domain.model.CharacterEntity;
 import com.rpgplace.application.domain.model.TableEntity;
+import com.rpgplace.application.domain.model.UserEntity;
+import com.rpgplace.application.domain.port.in.CharacterUseCasePort;
+import com.rpgplace.application.domain.port.in.TableUseCasePort;
+import com.rpgplace.application.infrastructure.adapter.web.dto.request.CharacterRequestDTO;
+import com.rpgplace.application.infrastructure.adapter.web.dto.request.JoinRequestDTO;
 import com.rpgplace.application.infrastructure.adapter.web.dto.request.TableRequestDTO;
+import com.rpgplace.application.infrastructure.adapter.web.dto.response.CharacterResponseDTO;
 import com.rpgplace.application.infrastructure.adapter.web.dto.response.TableResponseDTO;
+import com.rpgplace.application.infrastructure.adapter.web.mapper.CharacterMapper;
 import com.rpgplace.application.infrastructure.adapter.web.mapper.TableMapper;
+import com.rpgplace.application.infrastructure.aop.LogException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,37 +26,83 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tables")
+@RequiredArgsConstructor
 public class TableController {
 
     private final TableMapper tableMapper;
-    // private final TableUseCase tableUseCase; // Placeholder for TableUseCase
-
-    public TableController(TableMapper tableMapper /*, TableUseCase tableUseCase */) {
-        this.tableMapper = tableMapper;
-        // this.tableUseCase = tableUseCase;
-    }
+    private final TableUseCasePort tableUseCasePort;
+    private final CharacterMapper characterMapper;
+    private final CharacterUseCasePort characterUseCasePort;
 
     @PostMapping
-    public ResponseEntity<TableResponseDTO> createTable(@RequestBody TableRequestDTO tableRequestDTO) {
+    @LogException(message = "Error creating table")
+    public ResponseEntity<TableResponseDTO> createTable(@Valid @RequestBody TableRequestDTO tableRequestDTO) {
         TableEntity tableEntity = tableMapper.toEntity(tableRequestDTO);
-        // TableEntity createdTable = tableUseCase.createTable(tableEntity);
-        TableEntity createdTable = tableEntity; // Placeholder for actual use case call
+        TableEntity createdTable = tableUseCasePort.createTable(tableEntity);
         return new ResponseEntity<>(tableMapper.toResponseDTO(createdTable), HttpStatus.CREATED);
     }
 
+    @GetMapping("/owned")
+    @LogException(message = "Error getting owned tables")
+    public ResponseEntity<List<TableResponseDTO>> getOwnedTables(@AuthenticationPrincipal UserEntity user) {
+        List<TableEntity> tableEntities = tableUseCasePort.findTablesByMaster(user.getId());
+        List<TableResponseDTO> tableResponseDTOs = tableEntities.stream()
+                .map(tableMapper::toResponseDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(tableResponseDTOs, HttpStatus.OK);
+    }
+
+    @GetMapping("/joined")
+    @LogException(message = "Error getting joined tables")
+    public ResponseEntity<List<TableResponseDTO>> getJoinedTables(@AuthenticationPrincipal UserEntity user) {
+        List<TableEntity> tableEntities = tableUseCasePort.findTablesByPlayer(user.getId());
+        List<TableResponseDTO> tableResponseDTOs = tableEntities.stream()
+                .map(tableMapper::toResponseDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(tableResponseDTOs, HttpStatus.OK);
+    }
+
+    @PostMapping("/join")
+    @LogException(message = "Error joining table")
+    public ResponseEntity<TableResponseDTO> joinTable(@Valid @RequestBody JoinRequestDTO joinRequestDTO) {
+        TableEntity tableEntity = tableUseCasePort.findTableByAccessCode(joinRequestDTO.getAccessCode());
+        return new ResponseEntity<>(tableMapper.toResponseDTO(tableEntity), HttpStatus.OK);
+    }
+
+    @GetMapping("/{tableId}/characters")
+    @LogException(message = "Error getting characters by table id")
+    public ResponseEntity<List<CharacterResponseDTO>> getCharactersByTableId(@PathVariable UUID tableId) {
+        List<CharacterEntity> characterEntities = characterUseCasePort.findCharactersByTable(tableId);
+        List<CharacterResponseDTO> characterResponseDTOs = characterEntities.stream()
+                .map(characterMapper::toResponseDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(characterResponseDTOs, HttpStatus.OK);
+    }
+
+    @PostMapping("/{tableId}/characters")
+    @LogException(message = "Error creating character for table")
+    public ResponseEntity<CharacterResponseDTO> createCharacterForTable(
+            @PathVariable UUID tableId,
+            @Valid @RequestBody CharacterRequestDTO characterRequestDTO) {
+
+        characterRequestDTO.setTableId(tableId);
+        CharacterEntity characterEntity = characterMapper.toEntity(characterRequestDTO);
+
+        CharacterEntity createdCharacter = characterUseCasePort.createCharacter(characterEntity);
+        return new ResponseEntity<>(characterMapper.toResponseDTO(createdCharacter), HttpStatus.CREATED);
+    }
+
     @GetMapping("/{id}")
+    @LogException(message = "Error getting table by id")
     public ResponseEntity<TableResponseDTO> getTableById(@PathVariable UUID id) {
-        // TableEntity tableEntity = tableUseCase.getTableById(id);
-        TableEntity tableEntity = new TableEntity(); // Placeholder for actual use case call
-        tableEntity.setId(id);
-        // if (tableEntity == null) { return new ResponseEntity<>(HttpStatus.NOT_FOUND); }
+        TableEntity tableEntity = tableUseCasePort.getTableById(id);
         return new ResponseEntity<>(tableMapper.toResponseDTO(tableEntity), HttpStatus.OK);
     }
 
     @GetMapping
+    @LogException(message = "Error getting all tables")
     public ResponseEntity<List<TableResponseDTO>> getAllTables() {
-        // List<TableEntity> tableEntities = tableUseCase.getAllTables();
-        List<TableEntity> tableEntities = List.of(new TableEntity()); // Placeholder for actual use case call
+        List<TableEntity> tableEntities = tableUseCasePort.getAllTables();
         List<TableResponseDTO> tableResponseDTOs = tableEntities.stream()
                 .map(tableMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -52,22 +110,17 @@ public class TableController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TableResponseDTO> updateTable(@PathVariable UUID id, @RequestBody TableRequestDTO tableRequestDTO) {
-        // TableEntity existingTable = tableUseCase.getTableById(id);
-        TableEntity existingTable = new TableEntity(); // Placeholder for actual use case call
-        existingTable.setId(id);
-        // if (existingTable == null) { return new ResponseEntity<>(HttpStatus.NOT_FOUND); }
-
-        tableMapper.updateEntityFromDTO(tableRequestDTO, existingTable);
-        // TableEntity updatedTable = tableUseCase.updateTable(existingTable);
-        TableEntity updatedTable = existingTable; // Placeholder for actual use case call
+    @LogException(message = "Error updating table")
+    public ResponseEntity<TableResponseDTO> updateTable(@PathVariable UUID id, @Valid @RequestBody TableRequestDTO tableRequestDTO) {
+        TableEntity tableEntity = tableMapper.toEntity(tableRequestDTO);
+        TableEntity updatedTable = tableUseCasePort.updateTable(id, tableEntity);
         return new ResponseEntity<>(tableMapper.toResponseDTO(updatedTable), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
+    @LogException(message = "Error deleting table")
     public ResponseEntity<Void> deleteTable(@PathVariable UUID id) {
-        // tableUseCase.deleteTable(id);
-        // Placeholder for actual use case call
+        tableUseCasePort.deleteTable(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
