@@ -26,18 +26,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
-
-        String username = null;
         String jwt = null;
+        String username = null;
 
+        // Try to get the token from the Authorization header
+        final String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
+        } else if (request.getParameter("token") != null) {
+            // If not in header, try to get it from the "token" query parameter
+            jwt = request.getParameter("token");
+        }
+
+        if (jwt != null) {
             try {
                 username = jwtUtil.extractUsername(jwt);
-                Date expirationDate = jwtUtil.extractExpiration(jwt);
-                System.out.println("Token for user " + username + " expires at: " + expirationDate);
-                System.out.println("Current time: " + new Date());
             } catch (Exception e) {
                 System.out.println("Invalid JWT token: " + e.getMessage());
             }

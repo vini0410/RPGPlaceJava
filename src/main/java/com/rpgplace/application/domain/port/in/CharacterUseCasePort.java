@@ -20,4 +20,6 @@ public interface CharacterUseCasePort {
     CharacterEntity updateCharacter(UUID id, CharacterEntity characterEntity);
 
     void deleteCharacter(UUID id);
+
+    CharacterEntity updateCharacterSocket(com.rpgplace.application.infrastructure.adapter.web.dto.request.CharacterUpdateDTO characterUpdateDTO, com.rpgplace.application.domain.model.UserEntity principal);
 }

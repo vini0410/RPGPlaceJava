@@ -65,4 +65,27 @@ public class CharacterService implements CharacterUseCasePort {
                 .orElseThrow(() -> new ResourceNotFoundException("Character not found with id: " + id));
         characterRepositoryPort.deleteById(id);
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public com.rpgplace.application.domain.model.CharacterEntity updateCharacterSocket(com.rpgplace.application.infrastructure.adapter.web.dto.request.CharacterUpdateDTO characterUpdateDTO, com.rpgplace.application.domain.model.UserEntity principal) {
+        com.rpgplace.application.domain.model.CharacterEntity characterToUpdate = getCharacterById(characterUpdateDTO.getId());
+        com.rpgplace.application.domain.model.TableEntity table = characterToUpdate.getTable();
+
+        boolean isMaster = table.getMaster().getId().equals(principal.getId());
+        boolean isOwner = characterToUpdate.getUser().getId().equals(principal.getId());
+
+        if (!isMaster && !isOwner) {
+            throw new org.springframework.security.access.AccessDeniedException("You are not authorized to update this character.");
+        }
+
+        characterToUpdate.setName(characterUpdateDTO.getName());
+        characterToUpdate.setHealth(characterUpdateDTO.getHealth());
+        characterToUpdate.setMana(characterUpdateDTO.getMana());
+        characterToUpdate.setStrength(characterUpdateDTO.getStrength());
+        characterToUpdate.setAgility(characterUpdateDTO.getAgility());
+        characterToUpdate.setIntelligence(characterUpdateDTO.getIntelligence());
+
+        return characterRepositoryPort.save(characterToUpdate);
+    }
 }
