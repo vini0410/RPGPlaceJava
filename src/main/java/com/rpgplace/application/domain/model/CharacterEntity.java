@@ -20,7 +20,6 @@ import java.util.UUID;
 public class CharacterEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
