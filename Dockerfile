@@ -1,5 +1,5 @@
-# Stage 1: Build the application using Maven and Java 24
-FROM maven:3.9.6-eclipse-temurin-24 AS build
+# Stage 1: Build the application using Maven and Java 21
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies first to leverage Docker cache
@@ -10,8 +10,8 @@ RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Create the final, smaller image with Java 24 JRE
-FROM eclipse-temurin:24-jre
+# Stage 2: Create the final, smaller image with Java 21 JRE
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy the built JAR from the build stage
