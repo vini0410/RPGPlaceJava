@@ -54,6 +54,7 @@ public class SecurityConfig {
                 // CSRF is disabled for stateless APIs, but should be enabled for web apps.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/test").permitAll()
                         .requestMatchers("/auth/**", "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
