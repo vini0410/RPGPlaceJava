@@ -44,7 +44,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins(allowedOrigins.split(","));
+                .setAllowedOrigins(allowedOrigins.split(","))
+                .addInterceptors(new HttpHandshakeInterceptor());
     }
 
     @Override
@@ -56,25 +57,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    System.out.println("STOMP Connect Headers: " + accessor.toNativeHeaderMap());
                     String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
-                    String jwt = null;
 
                     if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                        jwt = authorizationHeader.substring(7);
+                        String jwt = authorizationHeader.substring(7);
                         String username = jwtUtil.extractUsername(jwt);
 
                         if (username != null) {
                             UserDetails userDetails = userService.loadUserByUsername(username);
 
                             if (jwtUtil.validateToken(jwt, userDetails)) {
-                                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                         userDetails, null, userDetails.getAuthorities());
-                                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                                accessor.setUser(usernamePasswordAuthenticationToken);
+                                accessor.setUser(authToken);
+                                SecurityContextHolder.getContext().setAuthentication(authToken);
+                                return message;
                             }
                         }
                     }
+                    throw new org.springframework.messaging.simp.stomp.StompConversionException("Authentication failed: Invalid or missing JWT token.");
                 }
                 return message;
             }
