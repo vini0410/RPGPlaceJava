@@ -13,8 +13,13 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorMessage> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
@@ -24,6 +29,7 @@ public class GlobalExceptionHandler {
                 "Not Found",
                 ex.getMessage(),
                 request.getRequestURI());
+        logger.warn("{} - {} - Error: Resource not found - {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
@@ -40,8 +46,9 @@ public class GlobalExceptionHandler {
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Error",
-                errors.toString(),
+                "Invalid data provided",
                 request.getRequestURI());
+        logger.warn("{} - {} - Error: Validation error - {}", request.getMethod(), request.getRequestURI(), errors);
         return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
 
@@ -51,8 +58,9 @@ public class GlobalExceptionHandler {
                 Instant.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                ex.getMessage(),
+                "An unexpected error occurred. Please try again later.",
                 request.getRequestURI());
+        logger.error("{} - {} - Error: Unexpected error - {}", request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
         return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

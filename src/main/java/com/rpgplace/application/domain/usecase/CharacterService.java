@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+import com.rpgplace.application.infrastructure.aop.LogException;
+
 @Service
 @RequiredArgsConstructor
 public class CharacterService implements CharacterUseCasePort {
@@ -17,32 +19,38 @@ public class CharacterService implements CharacterUseCasePort {
     private final CharacterRepositoryPort characterRepositoryPort;
 
     @Override
+    @LogException(message = "Error creating character")
     public CharacterEntity createCharacter(CharacterEntity characterEntity) {
         return characterRepositoryPort.save(characterEntity);
     }
 
     @Override
+    @LogException(message = "Error getting character by id")
     public CharacterEntity getCharacterById(UUID id) {
         return characterRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Character not found with id: " + id));
     }
 
     @Override
+    @LogException(message = "Error getting all characters")
     public List<CharacterEntity> getAllCharacters() {
         return characterRepositoryPort.findAll();
     }
 
     @Override
+    @LogException(message = "Error finding characters by table")
     public List<CharacterEntity> findCharactersByTable(UUID tableId) {
         return characterRepositoryPort.findByTableId(tableId);
     }
 
     @Override
+    @LogException(message = "Error finding characters by user")
     public List<CharacterEntity> findCharactersByUser(UUID userId) {
         return characterRepositoryPort.findByUserId(userId);
     }
 
     @Override
+    @LogException(message = "Error updating character")
     public CharacterEntity updateCharacter(UUID id, CharacterEntity characterEntity) {
         CharacterEntity existingCharacter = characterRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Character not found with id: " + id));
@@ -60,6 +68,7 @@ public class CharacterService implements CharacterUseCasePort {
     }
 
     @Override
+    @LogException(message = "Error deleting character")
     public void deleteCharacter(UUID id) {
         characterRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Character not found with id: " + id));
@@ -68,6 +77,7 @@ public class CharacterService implements CharacterUseCasePort {
 
     @Override
     @org.springframework.transaction.annotation.Transactional
+    @LogException(message = "Error updating character via socket")
     public com.rpgplace.application.domain.model.CharacterEntity updateCharacterSocket(com.rpgplace.application.infrastructure.adapter.web.dto.request.CharacterUpdateDTO characterUpdateDTO, com.rpgplace.application.domain.model.UserEntity principal) {
         com.rpgplace.application.domain.model.CharacterEntity characterToUpdate = getCharacterById(characterUpdateDTO.getId());
         com.rpgplace.application.domain.model.TableEntity table = characterToUpdate.getTable();
