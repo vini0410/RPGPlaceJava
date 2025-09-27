@@ -1,4 +1,4 @@
-package com.rpgplace.application.infrastructure.controller;
+package com.rpgplace.application.infrastructure.adapter.web.controller;
 
 import com.rpgplace.application.domain.dto.ChatMessage;
 import com.rpgplace.application.domain.dto.ChatMessageDTO;
