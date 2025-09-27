@@ -1,4 +1,4 @@
-package com.rpgplace.application.infrastructure.adapter.web.controller;
+package com.rpgplace.application.infrastructure.adapter.web.controller.ws;
 
 import com.rpgplace.application.infrastructure.adapter.web.dto.request.DrawEventDTO;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @RequiredArgsConstructor
-public class WhiteboardController {
+public class WhiteboardWSController {
 
     private final SimpMessagingTemplate messagingTemplate;
 

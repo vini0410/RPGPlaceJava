@@ -1,9 +1,8 @@
-package com.rpgplace.application.infrastructure.adapter.web.controller;
+package com.rpgplace.application.infrastructure.adapter.web.controller.rest;
 
 import com.rpgplace.application.domain.model.UserEntity;
 import com.rpgplace.application.domain.port.in.UserUseCasePort;
 import com.rpgplace.application.infrastructure.adapter.web.dto.request.UserUpdateRequestDTO;
-import com.rpgplace.application.infrastructure.adapter.web.dto.request.UserRequestDTO;
 import com.rpgplace.application.infrastructure.adapter.web.dto.response.UserResponseDTO;
 import com.rpgplace.application.infrastructure.adapter.web.mapper.UserMapper;
 import jakarta.validation.Valid;
@@ -24,7 +23,6 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserUseCasePort userUseCasePort;
 
-    
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable UUID id) {

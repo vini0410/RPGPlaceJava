@@ -1,4 +1,4 @@
-package com.rpgplace.application.infrastructure.adapter.web.controller;
+package com.rpgplace.application.infrastructure.adapter.web.controller.rest;
 
 import com.rpgplace.application.domain.model.UserEntity;
 import com.rpgplace.application.domain.port.in.UserUseCasePort;
